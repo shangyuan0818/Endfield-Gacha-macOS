@@ -87,27 +87,27 @@ struct ContentView: View {
         // 绑定拖拽事件
         .onDrop(of: [.fileURL], isTargeted: $isHovering) { providers in
             guard let provider = providers.first else { return false }
+            // 在主线程捕获 @State 值 (onDrop 闭包在主线程执行)
+            let capturedChars = chars
+            let capturedPool = pool
+            let capturedWeps = weps
             _ = provider.loadObject(ofClass: URL.self) { url, _ in
                 if let path = url?.path {
-                    // 切回主线程改变状态
                     DispatchQueue.main.async {
                         self.isProcessing = true
-                        self.chartImage = nil // 清空旧图表
+                        self.chartImage = nil
                         self.outputText = "正在读取并解析文件，请稍候..."
                     }
-                    // 开启后台线程进行 C++ 计算
-                    processFile(path: path)
+                    processFile(path: path, chars: capturedChars, pool: capturedPool, weps: capturedWeps)
                 }
             }
             return true
         }
     }
     
-    func processFile(path: String) {
-        // 在高优先级后台队列中执行沉重的 C++ 解析和绘图操作
+    func processFile(path: String, chars: String, pool: String, weps: String) {
         DispatchQueue.global(qos: .userInitiated).async {
             if let result = AnalyzerWrapper.analyzeFile(path, chars: chars, pool: pool, weps: weps) {
-                // 计算完成后，将生成的静态文字和图片送回主线程更新 UI
                 DispatchQueue.main.async {
                     self.outputText = result.textOutput
                     self.chartImage = result.chartImage
