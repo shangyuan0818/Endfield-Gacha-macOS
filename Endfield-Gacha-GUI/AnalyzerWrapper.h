@@ -2,8 +2,6 @@
 //  AnalyzerWrapper.h
 //  Endfield-Gacha
 //
-//  Created by Yin Shangyuan on 2026-04-02.
-//
 
 #import <Foundation/Foundation.h>
 #import <AppKit/AppKit.h> // 需要用到 NSImage
