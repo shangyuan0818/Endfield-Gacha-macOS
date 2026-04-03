@@ -2,8 +2,6 @@
 //  Endfield_GachaApp.swift
 //  Endfield-Gacha
 //
-//  Created by Yin Shangyuan on 2026-04-02.
-//
 
 import SwiftUI
 
