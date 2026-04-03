@@ -2,8 +2,6 @@
 //  AnalyzerWrapper.mm
 //  Endfield-Gacha
 //
-//  Created by Yin Shangyuan on 2026-04-02.
-//
 
 #import "AnalyzerWrapper.h"
 #include <string>
@@ -72,18 +70,42 @@ static Stats statsChar, statsWep;
 
 std::unordered_set<std::string> ParseCommaSeparated(const std::string& text) {
     std::unordered_set<std::string> result; std::string cur;
-    for (char c : text) { if (c == ',' || c == (char)0xEF) { auto s = cur.find_first_not_of(" \t\r\n"); auto e = cur.find_last_not_of(" \t\r\n"); if (s != std::string::npos) result.insert(cur.substr(s, e-s+1)); cur.clear(); } else cur += c; }
-    auto s = cur.find_first_not_of(" \t\r\n"); auto e = cur.find_last_not_of(" \t\r\n"); if (s != std::string::npos) result.insert(cur.substr(s, e-s+1)); return result;
+    for (size_t i = 0; i < text.size(); ++i) {
+        // UTF-8 全角逗号 = 0xEF 0xBC 0x8C (，) — 必须匹配完整 3 字节
+        bool isComma = (text[i] == ',');
+        if (!isComma && (unsigned char)text[i] == 0xEF && i+2 < text.size() && (unsigned char)text[i+1] == 0xBC && (unsigned char)text[i+2] == 0x8C) {
+            isComma = true; i += 2; // 跳过后两字节
+        }
+        if (isComma) {
+            auto s = cur.find_first_not_of(" \t\r\n"); auto e = cur.find_last_not_of(" \t\r\n");
+            if (s != std::string::npos) result.insert(cur.substr(s, e-s+1));
+            cur.clear();
+        } else cur += text[i];
+    }
+    auto s = cur.find_first_not_of(" \t\r\n"); auto e = cur.find_last_not_of(" \t\r\n");
+    if (s != std::string::npos) result.insert(cur.substr(s, e-s+1));
+    return result;
 }
 
 std::unordered_map<std::string,std::string> ParsePoolMap(const std::string& text) {
     std::unordered_map<std::string,std::string> result; std::string cur, cur_pool; bool reading_up = false;
-    for (char c : text) {
-        if (c == ':' && !reading_up) { auto s = cur.find_first_not_of(" \t"); auto e = cur.find_last_not_of(" \t"); if (s!=std::string::npos) cur_pool = cur.substr(s,e-s+1); else cur_pool.clear(); cur.clear(); reading_up = true; }
-        else if (c == ',') { auto s = cur.find_first_not_of(" \t"); auto e = cur.find_last_not_of(" \t"); std::string val = (s!=std::string::npos) ? cur.substr(s,e-s+1) : ""; if (!cur_pool.empty() && !val.empty()) result[cur_pool] = val; cur.clear(); cur_pool.clear(); reading_up = false; }
-        else cur += c;
+    auto trim = [](const std::string& s) -> std::string {
+        auto a = s.find_first_not_of(" \t\r\n"); auto b = s.find_last_not_of(" \t\r\n");
+        return (a != std::string::npos) ? s.substr(a, b-a+1) : "";
+    };
+    for (size_t i = 0; i < text.size(); ++i) {
+        // UTF-8 全角冒号 = 0xEF 0xBC 0x9A (：)
+        bool isColon = (text[i] == ':');
+        if (!isColon && (unsigned char)text[i]==0xEF && i+2<text.size() && (unsigned char)text[i+1]==0xBC && (unsigned char)text[i+2]==0x9A) { isColon=true; i+=2; }
+        // UTF-8 全角逗号 = 0xEF 0xBC 0x8C (，)
+        bool isComma = (text[i] == ',');
+        if (!isComma && !isColon && (unsigned char)text[i]==0xEF && i+2<text.size() && (unsigned char)text[i+1]==0xBC && (unsigned char)text[i+2]==0x8C) { isComma=true; i+=2; }
+        
+        if (isColon && !reading_up) { cur_pool = trim(cur); cur.clear(); reading_up = true; }
+        else if (isComma) { auto val = trim(cur); if (!cur_pool.empty() && !val.empty()) result[cur_pool]=val; cur.clear(); cur_pool.clear(); reading_up=false; }
+        else cur += text[i];
     }
-    if (reading_up) { auto s = cur.find_first_not_of(" \t"); auto e = cur.find_last_not_of(" \t"); std::string val = (s!=std::string::npos) ? cur.substr(s,e-s+1) : ""; if (!cur_pool.empty() && !val.empty()) result[cur_pool] = val; }
+    if (reading_up) { auto val = trim(cur); if (!cur_pool.empty() && !val.empty()) result[cur_pool]=val; }
     return result;
 }
 
@@ -144,7 +166,8 @@ static void DrawTextAt(NSString* text, float x, float y, NSFont* font, NSColor* 
 }
 
 void DrawKDE_CG(NSRect rect, const std::unordered_map<int,int>& freq_all, const std::unordered_map<int,int>& freq_up, NSString* title, int limit_base) {
-    NSFont* g_fontTitle = [NSFont boldSystemFontOfSize:13]; NSFont* g_fontTick = [NSFont systemFontOfSize:10];
+    static NSFont* g_fontTitle = [NSFont boldSystemFontOfSize:13];
+    static NSFont* g_fontTick = [NSFont systemFontOfSize:10];
     [[NSColor clearColor] setFill]; NSRectFill(rect); // 透明背景适应深色模式
     DrawTextAt(title, rect.origin.x+15, rect.origin.y+12, g_fontTitle, [NSColor labelColor]);
     if (freq_all.empty() && freq_up.empty()) return;
@@ -166,7 +189,8 @@ void DrawKDE_CG(NSRect rect, const std::unordered_map<int,int>& freq_all, const 
 }
 
 void DrawHazard_CG(NSRect rect, const std::vector<double>& hazard_all, const std::vector<double>& hazard_up, NSString* title, int limit_base) {
-    NSFont* g_fontTitle = [NSFont boldSystemFontOfSize:13]; NSFont* g_fontTick = [NSFont systemFontOfSize:10];
+    static NSFont* g_fontTitle = [NSFont boldSystemFontOfSize:13];
+    static NSFont* g_fontTick = [NSFont systemFontOfSize:10];
     [[NSColor clearColor] setFill]; NSRectFill(rect);
     DrawTextAt(title, rect.origin.x+15, rect.origin.y+12, g_fontTitle, [NSColor labelColor]);
     if (hazard_all.empty() && hazard_up.empty()) return;
