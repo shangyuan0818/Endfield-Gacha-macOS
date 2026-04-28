@@ -30,8 +30,7 @@ Gacha tracker and visualizer for Arknights: Endfield on macOS. Built with SwiftU
 - **Architecture / 架构**: Universal Binary (Native support for both **Intel (x86_64)** and **Apple Silicon (arm64)**). 通用二进制。
 - **64-bit Only / 纯64位**: Some features of SwiftUI require at least macOS 14.0. In addition, macOS has dropped support for 32-bit (i386) applications since version 10.15. This tool is 64-bit only. 部分 SwiftUI 功能最低要求 macOS 14.0。此外，由于 macOS 10.15 后不再支持 32 位应用，本工具仅支持 64 位架构。
 
-> **Windows Users:**
-> Please check the Windows Win32 version here: [Endfield-Gacha](https://github.com/shangyuan0818/Endfield-Gacha)
+> - **Windows**: Please check the Windows Win32 version here 请查看该Win32版本: [Endfield-Gacha](https://github.com/shangyuan0818/Endfield-Gacha)
 
 
 
