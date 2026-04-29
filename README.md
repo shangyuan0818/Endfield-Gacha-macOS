@@ -7,7 +7,7 @@ Gacha tracker and visualizer for Arknights: Endfield on macOS &amp; iOS. Built w
 
 
 ## Download / 下载
-**App Store Link / 链接**: [Link will be added here / 链接稍后更新]
+**App Store Link / 链接**: https://apps.apple.com/us/app/gacha-tracker-for-endfield/id6763351725
 
 
 ## How to use / 如何使用
