@@ -1,8 +1,8 @@
 # Endfield-Gacha-Apple 终末地抽卡工具（macOS &amp; iOS）
 
-Gacha tracker and visualizer for Arknights: Endfield on macOS &amp; iOS. Built with SwiftUI &amp; C++20.
+Gacha tracker and visualizer for Arknights: Endfield on macOS &amp; iOS. Built with Swift 6 &amp; C++20.
 
-《明日方舟：终末地》寻访(抽卡)数据保存，分析与可视化。使用 SwiftUI 与 C++20 构建，提供 macOS 与 iOS 原生高效体验。
+《明日方舟：终末地》寻访(抽卡)数据保存，分析与可视化。使用 Swift 6 与 C++20 构建，提供 macOS 与 iOS 原生高效体验。
 
 
 
